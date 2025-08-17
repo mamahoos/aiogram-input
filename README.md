@@ -25,24 +25,22 @@ from aiogram_ask import Asker
 
 # Create an Asker instance for your bot
 asker = Asker()
-dp = Dispatcher()
+dp    = Dispatcher()
+bot   = Bot(token=...)
 dp.include_router(asker.router)  # Add the Asker router
 
-# Example: Collect and validate an email address
-router = Router()
-@router.message(filters.Command("email"))
-async def collect_email(message: Message):
-    await message.answer("📧 Please provide your email address:")
+dp.message()
+async def collect_message(message: Message):
+    await message.answer("Say something!")
     response = await asker.ask(message.from_user.id, message.chat.id, timeout=30)
-    if response:
-        email = response.text.strip()
-        if "@" in email and "." in email:
-            await message.answer(f"✅ Valid email received: {email}")
-        else:
-            await message.answer("❌ Invalid email format. Please try again.")
+    if not response:
+        await message.answer("⏳ Timeout!")
     else:
-        await message.answer("⏳ Timeout! Please use /email to try again.")
+        await message.answer(f"You said {response.text}!")
 
 dp.include_router(router)
-# code..
+
+if __name__ == "__main__":
+    import asyncio
+    asyncio.run(dp.start_polling(bot))
 ```
