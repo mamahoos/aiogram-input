@@ -2,14 +2,21 @@ from setuptools import setup, find_packages
 
 setup(
     name='aiogram_ask',
-    version='0.1.1', 
+    version='0.1.3', 
     packages=find_packages(),
     install_requires=[
         'aiogram>=3.0.0',
     ],
     author='mamahoos',
+    author_email='m4m4hoos@example.com',  
     description='A modular, multi-client library for aiogram to handle user response waiting in Telegram bots.',
-    long_description=open('README.md').read(),
+    long_description=open('README.md', encoding='utf-8').read(),
     long_description_content_type='text/markdown',
     python_requires='>=3.8',
+    url='https://github.com/mamahoos/aiogram-ask',  
+    classifiers=[
+        'Programming Language :: Python :: 3',
+        'License :: OSI Approved :: MIT License',
+        'Operating System :: OS Independent',
+    ],
 )
