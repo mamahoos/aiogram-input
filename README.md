@@ -15,7 +15,7 @@ pip install .
 
 Or install from GitHub:
 ```
-pip install git+https://github.com/your-repo/aiogram-ask.git
+pip install git+https://github.com/mamahoos/aiogram-ask.git
 ```
 
 ## Usage
