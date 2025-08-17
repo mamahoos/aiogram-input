@@ -3,6 +3,8 @@ import logging
 from typing import Dict, Tuple, Optional, TYPE_CHECKING
 
 from aiogram.types import Message
+from aiogram import Router
+from .router import setup_router
 
 # ---------- Logging ---------- #
 
@@ -13,7 +15,17 @@ logger = logging.getLogger(__name__)
 class Asker:
     def __init__(self):
         self._pending: Dict[Tuple[int, int], 'asyncio.Future[Message]'] = {}
+        self._router: Optional[Router] = None
 
+    @property
+    def router(self) -> Router:
+        """
+        Lazily initialize and return the router for handling user replies.
+        """
+        if self._router is None:
+            self._router = setup_router(self._pending)
+        return self._router
+    
     async def ask(self, user_id: int, chat_id: int, timeout: Optional[float] = None) -> Optional[Message]:
         """
         Wait for the next message from a specific user in a specific chat.
