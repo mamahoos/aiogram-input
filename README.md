@@ -20,7 +20,7 @@ pip install git+https://github.com/mamahoos/aiogram-ask.git
 
 ## Usage
 ```python
-from aiogram import Bot, Dispatcher
+from aiogram import Bot, Dispatcher, filters, Router
 from aiogram_ask import Asker
 
 # Create an Asker instance for your bot
@@ -28,8 +28,11 @@ asker = Asker()
 dp    = Dispatcher()
 bot   = Bot(token=...)
 dp.include_router(asker.router)  # Add the Asker router
+# ----------
 
-dp.message()
+router = Router(name='start')
+
+@router.message()
 async def collect_message(message: Message):
     await message.answer("Say something!")
     response = await asker.ask(message.from_user.id, message.chat.id, timeout=30)
