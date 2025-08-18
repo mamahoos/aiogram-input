@@ -27,10 +27,11 @@ from aiogram_ask import Asker
 asker = Asker()
 dp    = Dispatcher()
 bot   = Bot(token=...)
-dp.include_router(asker.router)  # Add the Asker router
-# ----------
+dp.include_router(asker.router)  # Add the Asker router to dispatcher
 
-router = Router(name='start')
+# -----  main router  ----- #
+
+router = Router(name='main')
 
 @router.message()
 async def collect_message(message: Message):
