@@ -1,6 +1,6 @@
 import asyncio
 import logging
-from typing import Dict, Tuple, Optional, TYPE_CHECKING
+from typing import Dict, Tuple, Optional, TYPE_CHECKING, overload
 
 from aiogram.types import Message
 from aiogram import Router
@@ -25,6 +25,14 @@ class Asker:
         if self._router is None:
             self._router = setup_router(self._pending)
         return self._router
+    
+    @overload
+    async def ask(self, user_id: int, chat_id: int, timeout: None = None) -> Message:
+        ...
+
+    @overload
+    async def ask(self, user_id: int, chat_id: int, timeout: float) -> Optional[Message]:
+        ...
     
     async def ask(self, user_id: int, chat_id: int, timeout: Optional[float] = None) -> Optional[Message]:
         """
