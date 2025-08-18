@@ -27,7 +27,7 @@ class Asker:
         return self._router
     
     @overload
-    async def ask(self, user_id: int, chat_id: int, timeout: None = None) -> Message:
+    async def ask(self, user_id: int, chat_id: int) -> Message:
         ...
 
     @overload
@@ -36,7 +36,41 @@ class Asker:
     
     async def ask(self, user_id: int, chat_id: int, timeout: Optional[float] = None) -> Optional[Message]:
         """
-        Wait for the next message from a specific user in a specific chat.
+        Wait for the next incoming message from a specific user in a specific chat.
+
+        This coroutine suspends execution until the next message is received 
+        from the given ``user_id`` inside the given ``chat_id``. 
+        It uses an internal pending queue to resolve awaiting coroutines 
+        when the message arrives.
+
+        Args:
+            user_id (int): The unique identifier of the user to listen for.
+            chat_id (int): The unique identifier of the chat where the message is expected.
+            timeout (Optional[float], default=None): 
+                Maximum time in seconds to wait for the message. 
+                - If ``None``: waits indefinitely until a message arrives.
+                - If a positive float is given: waits up to that duration, 
+                  otherwise returns ``None`` if timeout is reached.
+
+        Returns:
+            Optional[Message]: 
+                - If ``timeout`` is ``None``: always returns a ``Message`` once received.  
+                - If ``timeout`` is a float: returns ``Message`` if received within the duration, 
+                  otherwise returns ``None`` after timeout.
+
+        Raises:
+            asyncio.CancelledError: If the waiting task is cancelled.
+            Exception: Any unexpected error raised during message dispatching 
+                       (not including ``TimeoutError``, which is handled internally).
+
+        Example:
+            ```python
+            msg = await asker.ask(user_id=123, chat_id=456, timeout=30)
+            if msg is None:
+                print("No reply received within 30 seconds.")
+            else:
+                print(f"User replied: {msg.text}")
+            ```
         """
         self._validate_args(user_id, chat_id, timeout)
         
