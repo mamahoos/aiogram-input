@@ -9,7 +9,7 @@ def setup_router(pending: Dict[Tuple[int, int], 'asyncio.Future[Message]']):
 
     @router.message(PendingUserFilter(pending))
     async def _catch_user_reply(message: Message):
-        key = (message.from_user.id, message.chat.id)
+        key = (message.from_user.id, message.chat.id) # pyright: ignore[reportOptionalMemberAccess]
         fut = pending[key]
         if not fut.done():
             fut.set_result(message)

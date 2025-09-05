@@ -8,4 +8,4 @@ class PendingUserFilter(BaseFilter):
         self._pending = pending
 
     async def __call__(self, message: Message) -> bool:
-        return (message.from_user and (message.from_user.id, message.chat.id) in self._pending)
+        return (message.from_user and (message.from_user.id, message.chat.id) in self._pending) # pyright: ignore[reportReturnType]
