@@ -8,13 +8,13 @@ def setup_router(storage: BaseStorage):
 
     @router.message(PendingUserFilter(storage=storage))
     async def _catch_user_reply(message: Message):
-        chat_id = message.chat.id
-        filter, future  = storage.get(chat_id)      # pyright: ignore[reportGeneralTypeIssues]
+        chat_id         = message.chat.id
+        filter, future  = await storage.get(chat_id)      # pyright: ignore[reportGeneralTypeIssues]
         if not future.done():
-            filter, future = storage.get(chat_id)   # pyright: ignore[reportGeneralTypeIssues]
+            filter, future = await storage.get(chat_id)   # pyright: ignore[reportGeneralTypeIssues]
             if filter is not None and not await filter(message):
                 return
             future.set_result(message)
-            storage.pop(chat_id)
+            await storage.pop(chat_id)
     
     return router

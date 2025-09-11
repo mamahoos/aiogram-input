@@ -1,8 +1,7 @@
 from aiogram.types   import Message
 from .               import BaseStorage
 from typing          import Optional, Dict, NamedTuple
-from asyncio         import Future
-from threading       import Lock
+from asyncio         import Future, Lock
 from aiogram.filters import Filter
 
 class PendingEntry(NamedTuple):
@@ -14,14 +13,17 @@ class DefaultStorage(BaseStorage):
         self._pending: Dict[int, PendingEntry] = {}
         self._lock = Lock()
     
-    def get(self, chat_id: int, /) -> Optional[PendingEntry]: # pyright: ignore[reportIncompatibleMethodOverride]
-        with self._lock:
+    async def get(self, chat_id: int, /) -> Optional[PendingEntry]: # pyright: ignore[reportIncompatibleMethodOverride]
+        async with self._lock:
             return self._pending.get(chat_id)
     
-    def pop(self, chat_id: int, /) -> Future[Message]:
-        with self._lock:
+    async def pop(self, chat_id: int, /) -> Future[Message]:
+        async with self._lock:
             return self._pending.pop(chat_id).future
 
-    def set(self, chat_id: int, /, filter: Optional[Filter], future: Future[Message]) -> None:
-        with self._lock:
+    async def set(self, chat_id: int, /, filter: Optional[Filter], future: Future[Message]) -> None:
+        async with self._lock:
             self._pending[chat_id] = PendingEntry(filter, future)
+            
+    def __contains__(self, chat_id: int, /) -> bool:
+        return chat_id in self._pending

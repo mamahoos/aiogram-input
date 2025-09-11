@@ -61,7 +61,7 @@ class InputManager:
 
         loop = asyncio.get_running_loop()
         future: asyncio.Future[Message] = loop.create_future()
-        self._storage.set(chat_id, filter=filter, future=future)
+        await self._storage.set(chat_id, filter=filter, future=future)
 
         logger.debug(f"[INPUT] Waiting for message in chat={chat_id}, timeout={timeout}, filter={filter}")
 
@@ -71,7 +71,7 @@ class InputManager:
             return result
         except asyncio.TimeoutError:
             logger.debug(f"[INPUT] Timeout for chat={chat_id}")
-            self._storage.pop(chat_id)
+            await self._storage.pop(chat_id)
             return None
 
     # ---------- Private Helpers ----------
