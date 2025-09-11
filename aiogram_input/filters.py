@@ -9,8 +9,4 @@ class PendingUserFilter(Filter):
         self._storage = storage
 
     async def __call__(self, message: Message) -> bool:
-        data = self._storage.get(message.chat.id)
-        if data is None:
-            return False
-        filter, future = data
-        return True if filter is None else bool(await filter(message))
+        return self._storage.get(message.chat.id) is not None
