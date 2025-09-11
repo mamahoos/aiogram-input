@@ -1,6 +1,5 @@
-import asyncio
-import logging
-from typing import Dict, Tuple, Optional, TYPE_CHECKING, overload, Union
+import asyncio, logging
+from typing import Optional, TYPE_CHECKING, Union
 
 from aiogram.types   import Message
 from aiogram.filters import Filter
@@ -17,8 +16,8 @@ logger = logging.getLogger(__name__)
 
 class InputManager:
     def __init__(self, storage: BaseStorage = DefaultStorage()):
-        self._storage = storage
-        self._router: Optional[Router] = None
+        self._storage: BaseStorage      = storage
+        self._router : Optional[Router] = None
 
     @property
     def router(self) -> Router:
@@ -83,5 +82,5 @@ class InputManager:
         if not TYPE_CHECKING:
             if not isinstance(chat_id, int):
                 raise TypeError(f"chat_id must be int, got {type(chat_id).__name__}")
-            if timeout is not None and not isinstance(timeout, (int, float)):
+            if not isinstance(timeout, (int, float)):
                 raise TypeError(f"timeout must be float or int or None, got {type(timeout).__name__}")
