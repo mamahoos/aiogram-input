@@ -2,7 +2,7 @@ from setuptools import setup, find_packages
 
 setup(
     name='aiogram_ask',
-    version='0.1.4', 
+    version='1.0.0', 
     packages=find_packages(),
     install_requires=[
         'aiogram>=3.0.0',

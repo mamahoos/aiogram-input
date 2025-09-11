@@ -1,20 +1,23 @@
 import asyncio
 import logging
-from typing import Dict, Tuple, Optional, TYPE_CHECKING, overload
+from typing import Dict, Tuple, Optional, TYPE_CHECKING, overload, Union
 
-from aiogram.types import Message
-from aiogram import Router
-from .router import setup_router
+from aiogram.types   import Message
+from aiogram.filters import Filter
+from aiogram         import Router
+
+from .router  import setup_router
+from .storage import BaseStorage, DefaultStorage
 
 # ---------- Logging ---------- #
 
 logger = logging.getLogger(__name__)
 
-# ---------- Asker ----------- #
+# ---------- InputManager ----------- #
 
-class Asker:
-    def __init__(self):
-        self._pending: Dict[Tuple[int, int], 'asyncio.Future[Message]'] = {}
+class InputManager:
+    def __init__(self, storage: BaseStorage = DefaultStorage()):
+        self._storage = storage
         self._router: Optional[Router] = None
 
     @property
@@ -23,80 +26,61 @@ class Asker:
         Lazily initialize and return the router for handling user replies.
         """
         if self._router is None:
-            self._router = setup_router(self._pending)
+            self._router = setup_router(self._storage)
         return self._router
-    
-    @overload
-    async def ask(self, user_id: int, chat_id: int) -> Message:
-        ...
 
-    @overload
-    async def ask(self, user_id: int, chat_id: int, timeout: float) -> Optional[Message]:
-        ...
-    
-    async def ask(self, user_id: int, chat_id: int, timeout: Optional[float] = None) -> Optional[Message]:
+    async def input(
+        self, 
+        chat_id: int, 
+        timeout: Union[float, int], 
+        filter: Optional[Filter] = None
+    ) -> Optional[Message]:
         """
-        Wait for the next incoming message from a specific user in a specific chat.
+        Wait asynchronously for the next incoming message in a specific chat.
 
-        This coroutine suspends execution until the next message is received 
-        from the given ``user_id`` inside the given ``chat_id``. 
+        This coroutine suspends execution until a message matching the 
+        given ``filter`` (if provided) arrives in the target ``chat_id``.
         It uses an internal pending queue to resolve awaiting coroutines 
-        when the message arrives.
+        once the message is dispatched.
 
         Args:
-            user_id (int): The unique identifier of the user to listen for.
-            chat_id (int): The unique identifier of the chat where the message is expected.
-            timeout (Optional[float], default=None): 
-                Maximum time in seconds to wait for the message. 
-                - If ``None``: waits indefinitely until a message arrives.
-                - If a positive float is given: waits up to that duration, 
-                  otherwise returns ``None`` if timeout is reached.
+            chat_id (int): The unique identifier of the chat to listen on.
+            timeout (float | int): Maximum number of seconds to wait.
+            filter (Optional[Filter]): Optional aiogram filter applied 
+                to incoming messages before resolving.
 
         Returns:
-            Optional[Message]: 
-                - If ``timeout`` is ``None``: always returns a ``Message`` once received.  
-                - If ``timeout`` is a float: returns ``Message`` if received within the duration, 
-                  otherwise returns ``None`` after timeout.
+            Optional[Message]:
+                - ``Message`` if received within the timeout window.
+                - ``None`` if no message arrived before timeout.
 
         Raises:
             asyncio.CancelledError: If the waiting task is cancelled.
-            Exception: Any unexpected error raised during message dispatching 
-                       (not including ``TimeoutError``, which is handled internally).
-
-        Example:
-            ```python
-            msg = await asker.ask(user_id=123, chat_id=456, timeout=30)
-            if msg is None:
-                print("No reply received within 30 seconds.")
-            else:
-                print(f"User replied: {msg.text}")
-            ```
+            Exception: For unexpected runtime errors.
         """
-        self._validate_args(user_id, chat_id, timeout)
-        
-        loop = asyncio.get_running_loop()
-        fut: asyncio.Future[Message] = loop.create_future()
-        self._pending[(user_id, chat_id)] = fut
+        self._validate_args(chat_id, timeout)
 
-        logger.debug(f"[ASK] Waiting for message from user={user_id}, chat={chat_id}, timeout={timeout}")
+        loop = asyncio.get_running_loop()
+        future: asyncio.Future[Message] = loop.create_future()
+        self._storage.set(chat_id, filter=filter, future=future)
+
+        logger.debug(f"[INPUT] Waiting for message in chat={chat_id}, timeout={timeout}, filter={filter}")
 
         try:
-            result = await asyncio.wait_for(fut, timeout=timeout)
-            logger.debug(f"[ASK] Got message from user={user_id}, chat={chat_id}: {result.text!r}")
+            result = await asyncio.wait_for(future, timeout=timeout)
+            logger.debug(f"[INPUT] Received message in chat={chat_id}")
             return result
         except asyncio.TimeoutError:
-            logger.debug(f"[ASK] Timeout for user={user_id}, chat={chat_id}")
-            self._pending.pop((user_id, chat_id), None)
+            logger.debug(f"[INPUT] Timeout for chat={chat_id}")
+            self._storage.pop(chat_id)
             return None
-        
-     # ---------- Private Helpers ----------
+
+    # ---------- Private Helpers ----------
 
     @staticmethod
-    def _validate_args(user_id: int, chat_id: int, timeout: Optional[float]) -> None:
+    def _validate_args(chat_id: int, timeout: Optional[float]) -> None:
         """Runtime validation in case type-checker is not used."""
         if not TYPE_CHECKING:
-            if not isinstance(user_id, int):
-                raise TypeError(f"user_id must be int, got {type(user_id).__name__}")
             if not isinstance(chat_id, int):
                 raise TypeError(f"chat_id must be int, got {type(chat_id).__name__}")
             if timeout is not None and not isinstance(timeout, (int, float)):

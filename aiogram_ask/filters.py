@@ -1,11 +1,16 @@
-from typing import Dict, Tuple
-from aiogram.types import Message
-from aiogram.filters import BaseFilter
-import asyncio
+from typing             import Dict, Tuple
+from aiogram.types      import Message
+from aiogram.filters    import Filter
+from .storage           import BaseStorage
 
-class PendingUserFilter(BaseFilter):
-    def __init__(self, pending: Dict[Tuple[int, int], 'asyncio.Future[Message]']):
-        self._pending = pending
+
+class PendingUserFilter(Filter):
+    def __init__(self, storage: BaseStorage):
+        self._storage = storage
 
     async def __call__(self, message: Message) -> bool:
-        return (message.from_user and (message.from_user.id, message.chat.id) in self._pending) # pyright: ignore[reportReturnType]
+        data = self._storage.get(message.chat.id)
+        if data is None:
+            return False
+        filter, future = data
+        return bool(await filter(message))
