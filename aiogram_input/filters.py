@@ -13,4 +13,4 @@ class PendingUserFilter(Filter):
         if data is None:
             return False
         filter, future = data
-        return bool(await filter(message))
+        return True if filter is None else bool(await filter(message))

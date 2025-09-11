@@ -35,10 +35,9 @@ pip install git+https://github.com/mamahoos/aiogram-input.git
 
 ``` python
 import re
-from aiogram import Bot, Dispatcher, Router
+from aiogram import Bot, Dispatcher, Router, F
 from aiogram.types import Message
 from aiogram_input import InputManager
-from aiogram.filters import ChatTypeFilter
 from aiogram.enums import ChatType
 
 TOKEN = "YOUR_BOT_TOKEN"
@@ -52,7 +51,7 @@ email_validator = re.compile(r"^[\w.-]+@[\w.-]+\.\w+$")
 
 router = Router(name="main")
 
-@router.message(CChatTypeFilter(chat_type=ChatType.PRIVATE))
+@router.message(F.chat.type == ChatType.PRIVATE)
 async def start_registration(message: Message):
     await message.answer("Welcome! Please enter your email:")
     
@@ -61,7 +60,7 @@ async def start_registration(message: Message):
         return await message.answer("⏳ Timeout! Try again.")
     
     email = response.text
-    if not email_validator.match(email):
+    if email is None or not email_validator.match(email):
         return await message.answer("❌ Invalid email format.")
     
     await message.answer(f"✅ Email registered: {email}")

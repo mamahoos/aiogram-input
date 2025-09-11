@@ -14,7 +14,7 @@ class BaseStorage(ABC):
         raise NotImplementedError
     
     @abstractmethod
-    def get(self, chat_id: int, /) -> Optional[Tuple[Filter, Future[Message]]]:
+    def get(self, chat_id: int, /) -> Optional[Tuple[Optional[Filter], Future[Message]]]:
         raise NotImplementedError
     
     def __contains__(self, chat_id: int, /) -> bool:
