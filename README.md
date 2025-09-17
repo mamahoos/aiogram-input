@@ -19,15 +19,22 @@ reply in a specific chat, with full support for multiple bot instances
 
 ## Installation
 
-Run the following in the package directory:
 
-``` bash
+You can install the package directly from PyPI:
+
+```bash
+pip install aiogram-input
+```
+
+Or, run the following in the package directory:
+
+```bash
 pip install .
 ```
 
 Or install from GitHub:
 
-``` bash
+```bash
 pip install git+https://github.com/mamahoos/aiogram-input.git
 ```
 
