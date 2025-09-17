@@ -1,20 +1,31 @@
-from aiogram        import Router
-from aiogram.types  import Message
-from .filters       import PendingUserFilter
-from .storage       import BaseStorage, DefaultStorage
+import logging
+from   aiogram       import Router
+from   aiogram.types import Message
+from  .filters       import PendingUserFilter
+from  .storage       import PendingEntryStorage
+from  .session       import SessionManager
+from   typing        import Optional
 
-def setup_router(storage: BaseStorage):
-    router = Router(name="asker")
+# ---------- Logging ---------- #
 
-    @router.message(PendingUserFilter(storage=storage))
-    async def _catch_user_reply(message: Message):
-        chat_id         = message.chat.id
-        filter, future  = await storage.get(chat_id)      # pyright: ignore[reportGeneralTypeIssues]
-        if not future.done():
-            filter, future = await storage.get(chat_id)   # pyright: ignore[reportGeneralTypeIssues]
-            if filter is not None and not await filter(message):
-                return
-            future.set_result(message)
-            await storage.pop(chat_id)
-    
-    return router
+logger = logging.getLogger(__name__)
+
+# ---------- RouterManager ---------- #
+
+class RouterManager:
+    def __init__(self, name: Optional[str], session: SessionManager, storage: PendingEntryStorage):
+        self.router   = Router(name="aiogram_input" or name)
+        self._session = session
+        self._storage = storage
+        self._setup_filters()
+        self._setup_handlers()
+
+    def _setup_handlers(self):
+        logger.debug("[ROUTER] Setting up message handler for pending users")
+        @self.router.message()
+        async def __catch_user_message(message: Message):
+            await self._session.feed(message)
+
+    def _setup_filters(self):
+        logger.debug("[ROUTER] Setting up PendingUserFilter")
+        self.router.message.filter(PendingUserFilter(storage=self._storage))
