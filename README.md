@@ -14,8 +14,12 @@ reply in a specific chat, with full support for multiple bot instances
     state, ensuring no conflicts when running multiple bots.
 -   **Timeout Handling**: Built-in timeout support to gracefully handle
     unresponsive users.
--   **Custom Storage**: Provides `BaseStorage` class for extending and
-    managing persistence.
+-   **Logging Support**: Integrated logging for easier debugging and
+    monitoring.
+-   **Thread-Safe & Race Condition Safe**: Designed to prevent race
+    conditions in concurrent scenarios.
+-   **Published on PyPI**: Easily installable via `pip install aiogram-input`.
+    
 
 ## Installation
 
@@ -24,12 +28,6 @@ You can install the package directly from PyPI:
 
 ```bash
 pip install aiogram-input
-```
-
-Or, run the following in the package directory:
-
-```bash
-pip install .
 ```
 
 Or install from GitHub:
