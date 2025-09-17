@@ -56,17 +56,19 @@ class InputManager:
             asyncio.CancelledError: If the waiting task is cancelled.
             Exception: For unexpected runtime errors.
         """
-        self._validate_args(chat_id, timeout)
+        self._validate_args(chat_id, timeout, filter)
         result = await self._session.start_waiting(chat_id, timeout, filter)
         return result
 
     # ---------- Private Helpers ----------
 
     @staticmethod
-    def _validate_args(chat_id: int, timeout: Union[float, int]) -> None:
+    def _validate_args(chat_id: int, timeout: Union[float, int], filter: Optional[Filter]) -> None:
         if not isinstance(chat_id, int):
             raise TypeError(f"chat_id must be int, got {type(chat_id).__name__}")
         if not isinstance(timeout, (int, float)):
             raise TypeError(f"timeout must be float or int, got {type(timeout).__name__}")
         if timeout <= 0:
             raise ValueError("timeout must be positive")
+        if filter is not None and not isinstance(filter, Filter):
+            raise TypeError(f"filter must be Filter or None, got {type(filter).__name__}")
