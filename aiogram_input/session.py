@@ -1,9 +1,8 @@
 import asyncio, logging
 from typing          import Optional, Union
 from aiogram.types   import Message
-from aiogram.filters import Filter
 from .storage        import PendingEntryStorage
-from .types          import CallbackType
+from .types          import FilterObjectType
 
 # ---------- Logging ---------- #
 
@@ -26,7 +25,7 @@ class SessionManager:
         self,
         chat_id: int,
         timeout: Union[int, float],
-        filter: Optional[CallbackType],
+        filter: FilterObjectType,
     ) -> Optional[Message]:
         """Start waiting for a user's input in a chat."""
         future: asyncio.Future[Message] = self._create_future()
@@ -56,14 +55,15 @@ class SessionManager:
             return
 
         filter, future = entry.filter, entry.future
-        if filter and not await filter(message):
-            filter_name = filter.__class__.__name__
+        if not await self._check_filter(filter, message):
+            filter_name = filter.__class__.__name__ if filter else str(None)
             logger.debug(f"[SESSION] Filter rejected message chat={chat_id}, filter={filter_name}")
             return
 
         if not future.done():
             future.set_result(message)
             logger.debug(f"[SESSION] Future resolved chat={chat_id}, message_id={message.message_id}")
+
 
     # ---------- Private Helpers ---------- #
 
@@ -79,9 +79,23 @@ class SessionManager:
     ) -> Message:
         """Wait for the future to complete or timeout."""
         return await asyncio.wait_for(future, timeout=timeout)
+    
+    @staticmethod
+    async def _check_filter(filter: FilterObjectType, message: Message) -> bool:
+        """
+        Evaluate aiogram FilterObject against the message.
+        Supports:
+        - None → always True
+        - FilterObject → await .call(message)
+        """
+        if filter is None:
+            return True
+
+        # FilterObject.__call__ is awaitable
+        return await filter.call(message)
 
     async def _register_pending(
-        self, chat_id: int, filter: Optional[CallbackType], future: asyncio.Future[Message]
+        self, chat_id: int, filter: FilterObjectType, future: asyncio.Future[Message]
     ) -> None:
         """Register a pending entry for the given chat."""
         await self._storage.set(chat_id, filter=filter, future=future)

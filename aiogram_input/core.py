@@ -4,8 +4,8 @@ from typing    import Optional, Union
 from functools import cached_property
 
 from  aiogram.types   import Message
-from  aiogram.filters import Filter
 from  aiogram         import Router
+from  aiogram.dispatcher.event.handler import FilterObject
 
 from .router  import RouterManager
 from .storage import PendingEntryStorage
@@ -58,7 +58,10 @@ class InputManager:
             Exception: For unexpected runtime errors.
         """
         self._validate_args(chat_id, timeout, filter)
-        result = await self._session.start_waiting(chat_id, timeout, filter)
+        
+        filter_obj = FilterObject(filter) if filter is not None else None
+        result     = await self._session.start_waiting(chat_id, timeout, filter_obj)
+        
         return result
 
     # ---------- Private Helpers ----------
