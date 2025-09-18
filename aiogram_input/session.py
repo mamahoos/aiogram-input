@@ -103,5 +103,14 @@ class SessionManager:
     async def _cleanup(self, chat_id: int) -> None:
         """Ensure pending entry is removed from storage."""
         removed = await self._storage.pop(chat_id)
-        if not removed:
+        if removed is None:
             logger.debug(f"[SESSION] Cleanup found nothing chat={chat_id}")
+            return
+        
+        future = removed
+        if not future.done():
+            try:
+                future.cancel()
+                logger.debug(f"[SESSION] Cancelled leftover future chat={chat_id}")
+            except Exception:
+                logger.exception("[SESSION] Failed to cancel leftover future")

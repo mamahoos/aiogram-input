@@ -14,9 +14,10 @@ class PendingEntryStorage:
         async with self._lock:
             return self._pending.get(chat_id)
     
-    async def pop(self, chat_id: int, /) -> Future[Message]:
+    async def pop(self, chat_id: int, /) -> Optional[Future[Message]]:
         async with self._lock:
-            return self._pending.pop(chat_id).future
+            entry = self._pending.pop(chat_id, None)
+            return entry.future if entry else None
 
     async def set(self, chat_id: int, /, filter: FilterObjectType, future: Future[Message]) -> None:
         async with self._lock:
