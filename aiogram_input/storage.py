@@ -1,14 +1,9 @@
 from aiogram.types   import Message
-from typing          import Optional, Dict, NamedTuple
+from typing          import Optional, Dict
 from asyncio         import Future, Lock
 from aiogram.filters import Filter
+from .types          import PendingEntry, CallbackType
 
-# ---------- PendingEntry ---------- #
-
-class PendingEntry(NamedTuple):
-    filter: Optional[Filter]
-    future: Future[Message]
-    
 # ---------- PendingEntryStorage ---------- #
 
 class PendingEntryStorage:
@@ -24,7 +19,7 @@ class PendingEntryStorage:
         async with self._lock:
             return self._pending.pop(chat_id).future
 
-    async def set(self, chat_id: int, /, filter: Optional[Filter], future: Future[Message]) -> None:
+    async def set(self, chat_id: int, /, filter: Optional[CallbackType], future: Future[Message]) -> None:
         async with self._lock:
             self._pending[chat_id] = PendingEntry(filter, future)
             

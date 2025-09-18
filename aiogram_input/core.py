@@ -10,6 +10,7 @@ from  aiogram         import Router
 from .router  import RouterManager
 from .storage import PendingEntryStorage
 from .session import SessionManager
+from . types  import CallbackType
 
 # ---------- Logging ---------- #
 
@@ -31,7 +32,7 @@ class InputManager:
         self, 
         chat_id: int, 
         timeout: Union[float, int], 
-        filter: Optional[Filter] = None
+        filter: Optional[CallbackType] = None
     ) -> Optional[Message]:
         """
         Wait asynchronously for the next message in a specific chat.
@@ -43,7 +44,7 @@ class InputManager:
         Args:
             chat_id (int): Unique identifier of the chat to listen on.
             timeout (float | int): Maximum seconds to wait for a message.
-            filter (Optional[Filter]): Optional aiogram filter to validate 
+            filter (Optional[CallbackType]): Optional callback to validate 
                 incoming messages.
 
         Returns:
@@ -63,12 +64,12 @@ class InputManager:
     # ---------- Private Helpers ----------
 
     @staticmethod
-    def _validate_args(chat_id: int, timeout: Union[float, int], filter: Optional[Filter]) -> None:
+    def _validate_args(chat_id: int, timeout: Union[float, int], filter: Optional[CallbackType]) -> None:
         if not isinstance(chat_id, int):
             raise TypeError(f"chat_id must be int, got {type(chat_id).__name__}")
         if not isinstance(timeout, (int, float)):
             raise TypeError(f"timeout must be float or int, got {type(timeout).__name__}")
         if timeout <= 0:
             raise ValueError("timeout must be positive")
-        if filter is not None and not isinstance(filter, Filter):
-            raise TypeError(f"filter must be Filter or None, got {type(filter).__name__}")
+        if filter is not None and not callable(filter):
+            raise TypeError(f"filter must be callable or None, got {type(filter).__name__}")

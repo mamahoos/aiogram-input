@@ -3,6 +3,7 @@ from typing          import Optional, Union
 from aiogram.types   import Message
 from aiogram.filters import Filter
 from .storage        import PendingEntryStorage
+from .types          import CallbackType
 
 # ---------- Logging ---------- #
 
@@ -25,7 +26,7 @@ class SessionManager:
         self,
         chat_id: int,
         timeout: Union[int, float],
-        filter: Optional[Filter],
+        filter: Optional[CallbackType],
     ) -> Optional[Message]:
         """Start waiting for a user's input in a chat."""
         future: asyncio.Future[Message] = self._create_future()
@@ -80,7 +81,7 @@ class SessionManager:
         return await asyncio.wait_for(future, timeout=timeout)
 
     async def _register_pending(
-        self, chat_id: int, filter: Optional[Filter], future: asyncio.Future[Message]
+        self, chat_id: int, filter: Optional[CallbackType], future: asyncio.Future[Message]
     ) -> None:
         """Register a pending entry for the given chat."""
         await self._storage.set(chat_id, filter=filter, future=future)
