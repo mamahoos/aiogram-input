@@ -1,7 +1,6 @@
 import logging
 
-from typing    import Optional, Union, TYPE_CHECKING
-from functools import cached_property
+from typing import Optional, Union, TYPE_CHECKING
 
 from  aiogram.types   import Message
 from  aiogram         import Router, Dispatcher
@@ -26,10 +25,6 @@ class InputManager:
         self._storage = PendingEntryStorage()
         self._session = SessionManager(self._storage)
         self._router  = RouterManager(target, self._session, self._storage, setup=True)
-
-    @cached_property
-    def router(self) -> Router:
-        return self._router.router
 
     async def input(
         self, 
