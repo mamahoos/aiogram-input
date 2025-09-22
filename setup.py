@@ -2,7 +2,7 @@ from setuptools import setup, find_packages
 
 setup(
     name='aiogram_input',
-    version='3.0.1', 
+    version='3.1.0', 
     packages=find_packages(),
     install_requires=[
         'aiogram>=3.0.0',

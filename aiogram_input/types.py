@@ -11,7 +11,7 @@ FilterObjectType = Optional[FilterObject]
 CallbackType     = Callable[..., Any]
 
 # Type alias for Router or Dispatcher
-Target = Union[Router, Dispatcher]
+Target           = Union[Router, Dispatcher]
 
 # Pending entry structure
 class PendingEntry(NamedTuple):

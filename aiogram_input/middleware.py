@@ -17,9 +17,11 @@ class InputMiddleware(BaseMiddleware):
         event: TelegramObject,
         data: Dict[str, Any],
     ) -> Any:
-        if isinstance(event, Message):
-            await self._session.feed(event)
         # TODO: Add support for other event types if needed
+        if isinstance(event, Message):  
+            fed = await self._session.feed(event)
+            if fed:
+                return  # If the message was consumed by a waiting session, skip further handlers
         return await handler(event, data)
 
     def setup(self, target: Target) -> None:

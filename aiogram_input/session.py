@@ -44,26 +44,31 @@ class SessionManager:
         finally:
             await self._cleanup(chat_id)
 
-    async def feed(self, message: Message) -> None:
-        """Feed an incoming message into the waiting session if valid."""
+    async def feed(self, message: Message) -> bool:
+        """Feed an incoming message into the waiting session if valid.
+        Returns True if the message was consumed by a waiting session.
+        """
         chat_id = message.chat.id
         logger.debug(f"[SESSION] Received message chat={chat_id}, message_id={message.message_id}")
         
         entry = await self._storage.get(chat_id)
         if not entry:
             logger.debug(f"[SESSION] No pending entry chat={chat_id}")
-            return
+            return False
 
         filter, future = entry.filter, entry.future
         if not await self._check_filter(filter, message):
             filter_name = filter.__class__.__name__ if filter else str(None)
             logger.debug(f"[SESSION] Filter rejected message chat={chat_id}, filter={filter_name}")
-            return
+            return False
 
         if not future.done():
             future.set_result(message)
             logger.debug(f"[SESSION] Future resolved chat={chat_id}, message_id={message.message_id}")
-
+            return True
+        else:
+            logger.debug(f"[SESSION] Future already done chat={chat_id}")
+            return False
 
     # ---------- Private Helpers ---------- #
 
