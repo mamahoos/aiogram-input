@@ -56,12 +56,9 @@ TOKEN = "YOUR_BOT_TOKEN"
 
 bot   = Bot(TOKEN)
 dp    = Dispatcher()
-asker = InputManager()
-dp.include_router(asker.router)
+asker = InputManager(dp)
 
-router = Router(name="confirm")
-
-@router.message(Command("delete"), F.chat.type == ChatType.PRIVATE)
+@dp.message(Command("delete"), F.chat.type == ChatType.PRIVATE)
 async def delete_command(message: Message):
     await message.answer("⚠️ Are you sure you want to delete your data? (yes/no)")
 
@@ -77,7 +74,6 @@ async def delete_command(message: Message):
     else:
         await message.answer("❌ Action canceled.")
 
-dp.include_router(router)
 ```
 
 ---
@@ -97,12 +93,9 @@ TOKEN = "YOUR_BOT_TOKEN"
 
 bot   = Bot(TOKEN)
 dp    = Dispatcher()
-asker = InputManager()
-dp.include_router(asker.router)
+asker = InputManager(dp)
 
-router = Router(name="group")
-
-@router.message(Command("register"), F.chat.type == ChatType.PRIVATE)
+@dp.message(Command("register"), F.chat.type == ChatType.PRIVATE)
 async def group_registration(message: Message):
     user_id = message.from_user.id
     chat_id = message.chat.id
@@ -116,7 +109,6 @@ async def group_registration(message: Message):
 
     await message.answer(f"✅ Email saved: {response.text}")
 
-dp.include_router(router)
 ```
 
 ---
@@ -134,12 +126,10 @@ from aiogram_input import InputManager
 TOKEN = "YOUR_BOT_TOKEN"
 ADMIN_ID = 123456789
 
-bot   = Bot(TOKEN)
-dp    = Dispatcher()
-asker = InputManager()
-dp.include_router(asker.router)
-
+bot    = Bot(TOKEN)
+dp     = Dispatcher()
 router = Router(name="admin")
+asker  = InputManager(router)
 
 class AdminFilter(Filter):
     async def __call__(self, message: Message) -> bool:
@@ -164,7 +154,6 @@ async def secure_command(message: Message):
     else:
         await message.answer("❌ Action canceled.")
         
-
 dp.include_router(router)
 ```
 
@@ -185,12 +174,9 @@ TOKEN = "YOUR_BOT_TOKEN"
 
 bot   = Bot(TOKEN)
 dp    = Dispatcher()
-asker = InputManager()
-dp.include_router(asker.router)
+asker = InputManager(dp)
 
-router = Router(name="form")
-
-@router.message(Command("form"), F.chat.type == ChatType.PRIVATE)
+@dp.message(Command("form"), F.chat.type == ChatType.PRIVATE)
 async def form_command(message: Message):
     user_id = message.from_user.id
     chat_id = message.chat.id
@@ -208,8 +194,6 @@ async def form_command(message: Message):
     await message.answer(f"✅ Registration complete!
 Name: {name.text}
 Email: {email.text}")
-
-dp.include_router(router)
 ```
 
 ---
@@ -228,12 +212,11 @@ TOKEN = "YOUR_BOT_TOKEN"
 
 bot   = Bot(TOKEN)
 dp    = Dispatcher()
-asker = InputManager()
-dp.include_router(asker.router)
+asker = InputManager(dp)
 
 router = Router(name="timeout")
 
-@router.message(Command("quiz"))
+@dp.message(Command("quiz"))
 async def quiz_command(message: Message):
     await message.answer("❓ What is 2 + 2?")
 
@@ -250,8 +233,6 @@ async def quiz_command(message: Message):
         await message.answer("🎉 Correct!")
     else:
         await message.answer("❌ Wrong. The correct answer is 4.")
-
-dp.include_router(router)
 ```
 
 ---
