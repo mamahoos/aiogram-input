@@ -1,10 +1,10 @@
 import logging
 
-from typing    import Optional, Union
+from typing    import Optional, Union, TYPE_CHECKING
 from functools import cached_property
 
 from  aiogram.types   import Message
-from  aiogram         import Router
+from  aiogram         import Router, Dispatcher
 from  aiogram.dispatcher.event.handler import FilterObject
 
 from .router  import RouterManager
@@ -19,10 +19,13 @@ logger = logging.getLogger(__name__)
 # ---------- InputManager ----------- #
 
 class InputManager:
-    def __init__(self, *, name: Optional[str] = None):
+    def __init__(self, target: Union[Router, Dispatcher], /) -> None:
+        """Initialize InputManager with a Router or Dispatcher."""
+        if not TYPE_CHECKING:
+            self._validate_target(target)
         self._storage = PendingEntryStorage()
         self._session = SessionManager(self._storage)
-        self._router  = RouterManager(name, self._session, self._storage)
+        self._router  = RouterManager(target, self._session, self._storage, setup=True)
 
     @cached_property
     def router(self) -> Router:
@@ -57,7 +60,8 @@ class InputManager:
             asyncio.CancelledError: If the waiting task is cancelled.
             Exception: For unexpected runtime errors.
         """
-        self._validate_args(chat_id, timeout, filter)
+        if not TYPE_CHECKING:
+            self._validate_args(chat_id, timeout, filter)
         
         filter_obj = FilterObject(filter) if filter is not None else None
         result     = await self._session.start_waiting(chat_id, timeout, filter_obj)
@@ -76,3 +80,8 @@ class InputManager:
             raise ValueError("timeout must be positive")
         if filter is not None and not callable(filter):
             raise TypeError(f"filter must be callable or None, got {type(filter).__name__}")
+        
+    @staticmethod  
+    def _validate_target(target: Union[Router, Dispatcher]) -> None:
+        if not isinstance(target, (Router, Dispatcher)):
+            raise TypeError(f"target must be Router or Dispatcher, got {type(target).__name__}")

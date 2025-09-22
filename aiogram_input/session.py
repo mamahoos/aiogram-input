@@ -98,6 +98,9 @@ class SessionManager:
         self, chat_id: int, filter: FilterObjectType, future: asyncio.Future[Message]
     ) -> None:
         """Register a pending entry for the given chat."""
+        if chat_id in self._storage:
+            logger.debug(f"[SESSION] Overwriting existing pending entry chat={chat_id}")
+            await self._cleanup(chat_id)
         await self._storage.set(chat_id, filter=filter, future=future)
         
     async def _cleanup(self, chat_id: int) -> None:
