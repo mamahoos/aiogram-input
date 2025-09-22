@@ -9,7 +9,7 @@ from  aiogram.dispatcher.event.handler import FilterObject
 from .router  import RouterManager
 from .storage import PendingEntryStorage
 from .session import SessionManager
-from . types  import CallbackType
+from .types   import CallbackType
 
 # ---------- Logging ---------- #
 
