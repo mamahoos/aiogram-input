@@ -16,6 +16,7 @@ reply in a specific chat, with full support for multiple bot instances (multi-cl
 - **Multi-Client** – Each bot instance has its own isolated state.
 - **Race Condition Safe** – Built for concurrency.
 - **Logging Integration** – Debug and monitor with ease.
+- **Quick Setup** - Just add one line to your project: `asker = InputManager(DP_OR_ROUTER)`
 
 ---
 
