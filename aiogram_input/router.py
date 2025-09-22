@@ -15,19 +15,13 @@ logger = logging.getLogger(__name__)
 
 class RouterManager:
     def __init__(self, target: Target, session: SessionManager, storage: PendingEntryStorage, setup: bool = True) -> None:
-        self.router   = target
-        self._session = session
-        self._storage = storage
+        self.router      = target
+        self._session    = session
+        self._storage    = storage
+        self._middleware = InputMiddleware(session)
         if setup:
             self._setup_middleware()
-            self._setup_handlers()
-
-    def _setup_handlers(self):
-        logger.debug("[ROUTER] Setting up message handler for pending users")
-        @self.router.message()
-        async def __catch_user_message(message: Message):
-            await self._session.feed(message)
 
     def _setup_middleware(self):
         logger.debug("[ROUTER] Setting up input middleware")
-        InputMiddleware(self._session).setup(self.router)
+        self._middleware.setup(self.router)
