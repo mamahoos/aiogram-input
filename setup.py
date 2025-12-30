@@ -8,7 +8,7 @@ setup(
         'aiogram>=3.0.0',
     ],
     author='mamahoos',
-    author_email='m4m4hoos@example.com',  
+    author_email='m4m4hoos@gmail.com',  
     description='A modular, multi-client library for aiogram to handle user response waiting in Telegram bots.',
     long_description=open('README.md', encoding='utf-8').read(),
     long_description_content_type='text/markdown',
