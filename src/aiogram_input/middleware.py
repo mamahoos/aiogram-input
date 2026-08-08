@@ -1,29 +1,38 @@
-from  typing        import Dict, Callable, Any, Awaitable
-from  aiogram.types import Message, TelegramObject
-from  aiogram       import BaseMiddleware
-from .session       import SessionManager
-from .types         import Target
+from __future__ import annotations
+
+from typing import Any, Awaitable, Callable, Dict
+
+from aiogram import BaseMiddleware, Dispatcher
+from aiogram.types import Message, TelegramObject
+
+from .session import SessionManager
+from .waiter import InputWaiter
+
+HANDLER_DATA_KEY = "input"
+
 
 class InputMiddleware(BaseMiddleware):
     """
-    Middleware to feed all incoming messages to SessionManager.
-    Should be registered in the Router or Dispatcher.
-    """
-    def __init__(self, session: SessionManager):
-        self._session = session
+    Feed pending waits and inject ``InputWaiter`` into handler data.
 
-    async def __call__(self,
+    Register only on Dispatcher so every router shares one waiter instance.
+    """
+
+    def __init__(self, session: SessionManager, waiter: InputWaiter) -> None:
+        self._session = session
+        self._waiter = waiter
+
+    async def __call__(
+        self,
         handler: Callable[[TelegramObject, Dict[str, Any]], Awaitable[Any]],
         event: TelegramObject,
         data: Dict[str, Any],
     ) -> Any:
-        # TODO: Add support for other event types if needed
-        if isinstance(event, Message):  
-            fed = await self._session.feed(event)
-            if fed:
-                return  # If the message was consumed by a waiting session, skip further handlers
+        data[HANDLER_DATA_KEY] = self._waiter
+        if isinstance(event, Message):
+            if await self._session.feed(event):
+                return None
         return await handler(event, data)
 
-    def setup(self, target: Target) -> None:
-        """Register middleware in the given Router or Dispatcher."""
-        target.message.outer_middleware.register(self)
+    def setup(self, dispatcher: Dispatcher) -> None:
+        dispatcher.message.outer_middleware.register(self)

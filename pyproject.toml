@@ -4,8 +4,8 @@ build-backend = "hatchling.build"
 
 [project]
 name = "aiogram-input"
-version = "3.1.1"
-description = "A modular, multi-client library for aiogram to handle user response waiting in Telegram bots."
+version = "4.0.0"
+description = "Await user replies in aiogram bots with Dispatcher-scoped setup and pluggable storage."
 readme = "README.md"
 license = "MIT"
 requires-python = ">=3.8"
@@ -21,7 +21,7 @@ keywords = [
     "timeout",
 ]
 classifiers = [
-    "Development Status :: 4 - Beta",
+    "Development Status :: 5 - Production/Stable",
     "Intended Audience :: Developers",
     "License :: OSI Approved :: MIT License",
     "Programming Language :: Python",
