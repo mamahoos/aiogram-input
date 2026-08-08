@@ -76,16 +76,14 @@ class SessionManager:
             message.message_id,
         )
 
-        if not await self._storage.contains(chat_id):
-            logger.debug("[SESSION] No pending entry chat=%s", chat_id)
-            return False
-
         wait = await self._registry.get(chat_id)
         if wait is None:
-            logger.debug("[SESSION] Marker without registry wait chat=%s", chat_id)
-            await self._storage.pop(chat_id)
+            # Do NOT delete storage markers here: with Redis another worker may
+            # own the wait. Orphan Redis keys should expire via TTL.
+            logger.debug("[SESSION] No local pending wait chat=%s", chat_id)
             return False
 
+        wait_id = wait.wait_id
         if not await self._check_filter(wait.filter, message):
             filter_name = wait.filter.__class__.__name__ if wait.filter else str(None)
             logger.debug(
@@ -95,11 +93,15 @@ class SessionManager:
             )
             return False
 
-        if wait.future.done():
-            logger.debug("[SESSION] Future already done chat=%s", chat_id)
+        consumed = await self._registry.resolve_if(chat_id, wait_id, message)
+        if not consumed:
+            logger.debug(
+                "[SESSION] Resolve skipped stale/done wait chat=%s wait_id=%s",
+                chat_id,
+                wait_id,
+            )
             return False
 
-        wait.future.set_result(message)
         logger.debug(
             "[SESSION] Future resolved chat=%s, message_id=%s",
             chat_id,
@@ -122,7 +124,11 @@ class SessionManager:
     async def _check_filter(filter: FilterObjectType, message: Message) -> bool:
         if filter is None:
             return True
-        return await filter.call(message)
+        try:
+            return bool(await filter.call(message))
+        except Exception:
+            logger.exception("[SESSION] Filter raised; treating as reject")
+            return False
 
     async def _register_pending(
         self,

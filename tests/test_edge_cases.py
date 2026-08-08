@@ -36,12 +36,13 @@ async def test_setup_input_wires_custom_data_key_end_to_end() -> None:
 
 
 @pytest.mark.asyncio
-async def test_orphan_storage_marker_is_cleaned_on_feed(
+async def test_storage_marker_without_local_wait_is_not_deleted(
     session: SessionManager, storage: MemoryInputStorage
 ) -> None:
+    """Redis multi-worker safety: never delete another process's marker."""
     await storage.set(55, WaitRecord(wait_id="orphan", created_at=1.0))
     assert await session.feed(make_message(55)) is False
-    assert await storage.contains(55) is False
+    assert await storage.contains(55) is True
 
 
 @pytest.mark.asyncio
@@ -55,6 +56,8 @@ async def test_feed_when_future_already_done(session: SessionManager) -> None:
     )
     await session._storage.set(chat_id, WaitRecord(wait_id="x", created_at=1.0))
     assert await session.feed(make_message(chat_id)) is False
+    # Marker may remain until owning cleanup/TTL; feed must not crash.
+    assert await session._storage.contains(chat_id) is True
 
 
 @pytest.mark.asyncio

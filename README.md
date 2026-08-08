@@ -36,7 +36,7 @@ dp = Dispatcher()
 # Local / single process
 setup_input(dp, storage=MemoryInputStorage())
 
-# Production (multi-worker): Redis-backed wait markers
+# Production: Redis markers + TTL (futures still resolve on the owning worker)
 # redis = Redis.from_url("redis://localhost:6379/0")
 # setup_input(dp, storage=RedisInputStorage(redis, ttl=300))
 
