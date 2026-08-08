@@ -1,20 +1,30 @@
-from typing        import Any, Callable, NamedTuple, Optional, Union
-from aiogram.types import Message
-from asyncio       import Future
-from aiogram       import Dispatcher, Router
+from __future__ import annotations
+
+from asyncio import Future
+from dataclasses import dataclass
+from typing import Any, Callable, Optional, Union
+
+from aiogram import Dispatcher, Router
 from aiogram.dispatcher.event.handler import FilterObject
+from aiogram.types import Message
 
-# Type alias for filter object
 FilterObjectType = Optional[FilterObject]
+CallbackType = Callable[..., Any]
+Target = Union[Router, Dispatcher]
 
-# Type alias for filter callback
-CallbackType     = Callable[..., Any]
 
-# Type alias for Router or Dispatcher
-Target           = Union[Router, Dispatcher]
+@dataclass(slots=True)
+class WaitRecord:
+    """Redis-safe wait marker persisted in InputStorage."""
 
-# Pending entry structure
-class PendingEntry(NamedTuple):
-    filter: FilterObjectType
+    wait_id: str
+    created_at: float
+
+
+@dataclass(slots=True)
+class PendingWait:
+    """In-process wait state (futures and filters stay local)."""
+
+    wait_id: str
     future: Future[Message]
-    
+    filter: FilterObjectType
