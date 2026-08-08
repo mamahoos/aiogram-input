@@ -135,12 +135,14 @@ class SessionManager:
             chat_id,
             PendingWait(wait_id=wait_id, future=future, filter=filter),
         )
-        if previous is not None:
-            logger.debug("[SESSION] Overwriting existing pending entry chat=%s", chat_id)
-            self._registry.cancel_wait(previous, chat_id=chat_id)
+        # Persist the new marker before aborting the previous wait so a racing
+        # cleanup cannot delete the replacement key from Redis/Memory.
         await self._storage.set(
             chat_id, WaitRecord(wait_id=wait_id, created_at=time.time())
         )
+        if previous is not None:
+            logger.debug("[SESSION] Overwriting existing pending entry chat=%s", chat_id)
+            self._registry.cancel_wait(previous, chat_id=chat_id)
 
     async def _cleanup(self, chat_id: int, wait_id: str) -> None:
         wait = await self._registry.pop_if(chat_id, wait_id)
