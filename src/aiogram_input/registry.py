@@ -44,8 +44,9 @@ class WaitRegistry:
 
     @staticmethod
     def cancel_wait(wait: PendingWait, *, chat_id: int) -> None:
+        """Abort a wait by resolving it with ``None`` (no CancelledError leak)."""
         future = wait.future
         if future.done():
             return
-        future.cancel()
-        logger.debug("[REGISTRY] Cancelled leftover future chat=%s", chat_id)
+        future.set_result(None)
+        logger.debug("[REGISTRY] Aborted leftover wait chat=%s", chat_id)

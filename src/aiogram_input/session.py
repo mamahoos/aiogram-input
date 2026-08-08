@@ -48,6 +48,9 @@ class SessionManager:
 
         try:
             message = await self._await_future(future, timeout)
+            if message is None:
+                logger.debug("[SESSION] Wait aborted chat=%s", chat_id)
+                return None
             logger.debug(
                 "[SESSION] Success chat=%s, message_id=%s",
                 chat_id,
@@ -57,9 +60,6 @@ class SessionManager:
         except asyncio.TimeoutError:
             logger.warning("[SESSION] Timeout chat=%s", chat_id)
             return None
-        except asyncio.CancelledError:
-            logger.debug("[SESSION] Cancelled chat=%s", chat_id)
-            raise
         finally:
             await self._cleanup(chat_id, wait_id)
 
