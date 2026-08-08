@@ -78,3 +78,9 @@ async def test_redis_loads_bytes_payload() -> None:
     record = WaitRecord(wait_id="b", created_at=3.0)
     raw = RedisInputStorage._dumps(record).encode()
     assert RedisInputStorage._loads(raw) == record
+
+
+@pytest.mark.asyncio
+async def test_redis_loads_invalid_payload_returns_none() -> None:
+    assert RedisInputStorage._loads(b"nope") is None
+    assert RedisInputStorage._loads('{"wait_id":""}') is None

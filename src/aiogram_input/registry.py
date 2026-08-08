@@ -1,8 +1,10 @@
 from __future__ import annotations
 
 import logging
-from asyncio import Lock
+from asyncio import InvalidStateError, Lock
 from typing import Dict, Optional
+
+from aiogram.types import Message
 
 from .types import PendingWait
 
@@ -38,6 +40,27 @@ class WaitRegistry:
                 return None
             return self._waits.pop(chat_id)
 
+    async def resolve_if(
+        self, chat_id: int, wait_id: str, message: Message, /
+    ) -> bool:
+        """
+        Atomically complete ``wait_id`` with ``message`` if it is still current.
+
+        Returns True only when this call consumed the wait.
+        """
+        async with self._lock:
+            wait = self._waits.get(chat_id)
+            if wait is None or wait.wait_id != wait_id:
+                return False
+            future = wait.future
+            if future.done():
+                return False
+            try:
+                future.set_result(message)
+            except InvalidStateError:
+                return False
+            return True
+
     async def contains(self, chat_id: int, /) -> bool:
         async with self._lock:
             return chat_id in self._waits
@@ -48,5 +71,8 @@ class WaitRegistry:
         future = wait.future
         if future.done():
             return
-        future.set_result(None)
+        try:
+            future.set_result(None)
+        except InvalidStateError:
+            return
         logger.debug("[REGISTRY] Aborted leftover wait chat=%s", chat_id)
