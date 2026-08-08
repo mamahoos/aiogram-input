@@ -101,6 +101,7 @@ async def test_public_exports() -> None:
         "InputStorage",
         "InputWaiter",
         "MemoryInputStorage",
+        "RedisInputStorage",
         "setup_input",
         "__version__",
     ):

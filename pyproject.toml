@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "aiogram-input"
-version = "4.1.0"
+version = "4.2.0"
 description = "Await user replies in aiogram bots with Dispatcher-scoped setup and pluggable storage."
 readme = "README.md"
 license = "MIT"
@@ -19,6 +19,7 @@ keywords = [
     "input",
     "await",
     "timeout",
+    "redis",
 ]
 classifiers = [
     "Development Status :: 5 - Production/Stable",
@@ -38,6 +39,11 @@ dependencies = [
     "aiogram>=3.0.0",
 ]
 
+[project.optional-dependencies]
+redis = [
+    "redis>=5.0.0",
+]
+
 [project.urls]
 Homepage = "https://github.com/mamahoos/aiogram-input"
 Repository = "https://github.com/mamahoos/aiogram-input"
@@ -48,6 +54,8 @@ dev = [
     "pytest>=8.0.0",
     "pytest-asyncio>=0.23.0",
     "pytest-cov>=7.1.0",
+    "redis>=5.0.0",
+    "fakeredis[lua]>=2.26.0",
 ]
 
 [tool.hatch.build.targets.sdist]

@@ -19,6 +19,7 @@ Register once on the Dispatcher. Await `input.wait(...)`. Get a `Message`, or `N
 
 ```bash
 pip install -U aiogram-input
+pip install -U "aiogram-input[redis]"   # Redis storage
 ```
 
 Python 3.10+, aiogram 3.
@@ -27,21 +28,23 @@ Python 3.10+, aiogram 3.
 
 ```python
 from aiogram import Dispatcher
-from aiogram_input import MemoryInputStorage, setup_input
+from aiogram_input import MemoryInputStorage, RedisInputStorage, setup_input
+from redis.asyncio import Redis
 
 dp = Dispatcher()
 
 # Local / single process
 setup_input(dp, storage=MemoryInputStorage())
 
-# Production (multi-worker): same API, Redis-backed storage
-# setup_input(dp, storage=RedisInputStorage(redis))
+# Production (multi-worker): Redis-backed wait markers
+# redis = Redis.from_url("redis://localhost:6379/0")
+# setup_input(dp, storage=RedisInputStorage(redis, ttl=300))
 
 # If `input` already means something else in your handlers:
 # setup_input(dp, data_key="aiogram_input")
 ```
 
-`InputWaiter` is injected into handlers (DI, like `FSMContext`). Storage is swappable via `InputStorage` (**Memory** today, **Redis** when you scale). The DI key is configurable (`data_key`, default `"input"`).
+`InputWaiter` is injected into handlers (DI, like `FSMContext`). Pick storage: **Memory** or **Redis** (`InputStorage`). Futures stay in-process; Redis holds wait markers. DI key is configurable (`data_key`, default `"input"`).
 
 ## Examples
 

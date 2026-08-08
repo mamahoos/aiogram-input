@@ -2,7 +2,7 @@ from importlib.metadata import PackageNotFoundError, version
 
 from .middleware import DEFAULT_DATA_KEY
 from .setup import setup_input
-from .storage import InputStorage, MemoryInputStorage
+from .storage import InputStorage, MemoryInputStorage, RedisInputStorage
 from .waiter import InputWaiter
 
 try:
@@ -15,6 +15,7 @@ __all__ = (
     "InputStorage",
     "InputWaiter",
     "MemoryInputStorage",
+    "RedisInputStorage",
     "setup_input",
     "__version__",
 )
