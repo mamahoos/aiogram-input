@@ -8,7 +8,7 @@ from aiogram import Dispatcher
 from aiogram.types import CallbackQuery
 
 from aiogram_input import InputWaiter, setup_input
-from aiogram_input.middleware import HANDLER_DATA_KEY, InputMiddleware
+from aiogram_input.middleware import DEFAULT_DATA_KEY, InputMiddleware
 from aiogram_input.session import SessionManager
 from .helpers import make_message
 
@@ -64,7 +64,7 @@ async def test_non_message_event_passes_through_with_injection() -> None:
 
     async def handler(evt, data):
         seen["event"] = evt
-        seen["input"] = data.get(HANDLER_DATA_KEY)
+        seen["input"] = data.get(DEFAULT_DATA_KEY)
         return "cb"
 
     assert await middleware(handler, event, {}) == "cb"
@@ -83,7 +83,7 @@ async def test_unmatched_message_reaches_handler_fsm_coexistence() -> None:
     async def handler(event, data):
         nonlocal reached
         reached = True
-        assert data[HANDLER_DATA_KEY] is waiter
+        assert data[DEFAULT_DATA_KEY] is waiter
         return "handled"
 
     result = await middleware(handler, make_message(999), {})

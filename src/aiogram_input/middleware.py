@@ -8,7 +8,7 @@ from aiogram.types import Message, TelegramObject
 from .session import SessionManager
 from .waiter import InputWaiter
 
-HANDLER_DATA_KEY = "input"
+DEFAULT_DATA_KEY = "input"
 
 
 class InputMiddleware(BaseMiddleware):
@@ -18,9 +18,18 @@ class InputMiddleware(BaseMiddleware):
     Register only on Dispatcher so every router shares one waiter instance.
     """
 
-    def __init__(self, session: SessionManager, waiter: InputWaiter) -> None:
+    def __init__(
+        self,
+        session: SessionManager,
+        waiter: InputWaiter,
+        *,
+        data_key: str = DEFAULT_DATA_KEY,
+    ) -> None:
+        if not data_key:
+            raise ValueError("data_key must be a non-empty string")
         self._session = session
         self._waiter = waiter
+        self._data_key = data_key
 
     async def __call__(
         self,
@@ -28,7 +37,7 @@ class InputMiddleware(BaseMiddleware):
         event: TelegramObject,
         data: Dict[str, Any],
     ) -> Any:
-        data[HANDLER_DATA_KEY] = self._waiter
+        data[self._data_key] = self._waiter
         if isinstance(event, Message):
             if await self._session.feed(event):
                 return None
