@@ -1,8 +1,15 @@
 # aiogram-input
 
-Await the next user message in [aiogram](https://github.com/aiogram/aiogram) bots — with Dispatcher-scoped setup, handler DI, and pluggable storage.
+[![PyPI](https://img.shields.io/pypi/v/aiogram-input.svg)](https://pypi.org/project/aiogram-input/)
+[![Python](https://img.shields.io/pypi/pyversions/aiogram-input.svg)](https://pypi.org/project/aiogram-input/)
+[![Test](https://github.com/mamahoos/aiogram-input/actions/workflows/test.yml/badge.svg)](https://github.com/mamahoos/aiogram-input/actions/workflows/test.yml)
+[![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 
-Works alongside aiogram FSM: only matching waits consume messages; everything else passes through.
+Await the next user message in [aiogram](https://github.com/aiogram/aiogram) bots — Dispatcher-scoped setup, handler DI, pluggable storage.
+
+Works with aiogram FSM: only matching waits consume messages; everything else passes through.
+
+**Current release:** [`4.0.0`](https://pypi.org/project/aiogram-input/4.0.0/) on PyPI.
 
 ## Features
 
@@ -12,12 +19,21 @@ Works alongside aiogram FSM: only matching waits consume messages; everything el
 - `InputStorage` protocol + `MemoryInputStorage` (Redis-ready boundary)
 - Typed package (`py.typed`)
 
+## Requirements
+
+- Python **3.10+**
+- aiogram **3.x**
+
 ## Install
 
 ```bash
-pip install aiogram-input
+pip install -U aiogram-input
 # or
 uv add aiogram-input
+```
+
+```bash
+pip install "aiogram-input==4.0.0"
 ```
 
 ## Quick start
@@ -45,7 +61,7 @@ async def ask(message: Message, input: InputWaiter):
     await message.answer(f"Hello, {reply.text}")
 ```
 
-Register routers as usual after `setup_input(dp)` — you do **not** construct a waiter per router.
+Call `setup_input(dp)` once. Include routers as usual — do **not** construct a waiter per router.
 
 ## Migration from 3.x → 4.0
 
@@ -72,6 +88,12 @@ async def ask(message: Message, input: InputWaiter):
 | `asker.input(...)` | `input.wait(...)` |
 | Setup on Router or Dispatcher | Dispatcher only |
 | Built-in dict storage | `MemoryInputStorage` / custom `InputStorage` |
+
+Upgrade:
+
+```bash
+pip install -U "aiogram-input>=4.0.0"
+```
 
 ## Examples
 
@@ -126,12 +148,12 @@ async def form(message: Message, input: InputWaiter):
 ## Storage
 
 ```python
-from aiogram_input import InputStorage, MemoryInputStorage, setup_input
+from aiogram_input import MemoryInputStorage, setup_input
 
 setup_input(dp, storage=MemoryInputStorage())
 ```
 
-`InputStorage` stores only wait markers (safe to back with Redis later). Futures stay in-process via an internal registry.
+`InputStorage` stores only wait markers (safe to back with Redis later). Futures stay in-process in an internal registry.
 
 ## Develop
 
@@ -141,6 +163,8 @@ uv run pytest
 uv build
 ```
 
+CI runs on every push/PR to `main` (Python 3.10–3.13). Releases publish to PyPI on `v*` tags.
+
 ## License
 
-MIT
+MIT — see [LICENSE](LICENSE).
