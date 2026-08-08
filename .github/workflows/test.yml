@@ -6,6 +6,10 @@ on:
   pull_request:
     branches: [main]
 
+concurrency:
+  group: test-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
   test:
     runs-on: ubuntu-latest
@@ -21,12 +25,25 @@ jobs:
         uses: astral-sh/setup-uv@v6
         with:
           python-version: ${{ matrix.python-version }}
+          enable-cache: true
 
       - name: Sync dependencies
-        run: uv sync --group dev
+        run: uv sync --group dev --frozen
 
-      - name: Run tests
-        run: uv run pytest -q
+      - name: Run tests with coverage
+        run: >
+          uv run pytest -q
+          --cov=aiogram_input
+          --cov-report=term-missing
+          --cov-fail-under=95
 
       - name: Build package
         run: uv build
+
+      - name: Import smoke check
+        run: >
+          uv run python -c
+          "from aiogram_input import setup_input, InputWaiter, DEFAULT_DATA_KEY, __version__;
+          assert DEFAULT_DATA_KEY == 'input';
+          assert __version__;
+          print(__version__)"
