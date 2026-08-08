@@ -2,6 +2,7 @@
 
 [![PyPI](https://img.shields.io/pypi/v/aiogram-input.svg)](https://pypi.org/project/aiogram-input/)
 [![Test](https://github.com/mamahoos/aiogram-input/actions/workflows/test.yml/badge.svg)](https://github.com/mamahoos/aiogram-input/actions/workflows/test.yml)
+[![Redis](https://github.com/mamahoos/aiogram-input/actions/workflows/redis-integration.yml/badge.svg)](https://github.com/mamahoos/aiogram-input/actions/workflows/redis-integration.yml)
 
 Wait for the next Telegram message inside an aiogram handler — without an FSM for every short prompt.
 
@@ -19,32 +20,39 @@ Register once on the Dispatcher. Await `input.wait(...)`. Get a `Message`, or `N
 
 ```bash
 pip install -U aiogram-input
-pip install -U "aiogram-input[redis]"   # Redis storage
+pip install -U "aiogram-input[redis]"   # for RedisInputStorage
 ```
 
 Python 3.10+, aiogram 3.
 
 ## Setup
 
+**Memory** (local / single process):
+
 ```python
 from aiogram import Dispatcher
-from aiogram_input import MemoryInputStorage, RedisInputStorage, setup_input
+from aiogram_input import MemoryInputStorage, setup_input
+
+dp = Dispatcher()
+setup_input(dp, storage=MemoryInputStorage())
+```
+
+**Redis** (markers shared; use TTL so abandoned waits expire):
+
+```python
+from aiogram import Dispatcher
+from aiogram_input import RedisInputStorage, setup_input
 from redis.asyncio import Redis
 
 dp = Dispatcher()
-
-# Local / single process
-setup_input(dp, storage=MemoryInputStorage())
-
-# Production: Redis markers + TTL (futures still resolve on the owning worker)
-# redis = Redis.from_url("redis://localhost:6379/0")
-# setup_input(dp, storage=RedisInputStorage(redis, ttl=300))
-
-# If `input` already means something else in your handlers:
-# setup_input(dp, data_key="aiogram_input")
+redis = Redis.from_url("redis://localhost:6379/0")
+setup_input(dp, storage=RedisInputStorage(redis, ttl=300))
 ```
 
-`InputWaiter` is injected into handlers (DI, like `FSMContext`). Pick storage: **Memory** or **Redis** (`InputStorage`). Futures stay in-process; Redis holds wait markers. DI key is configurable (`data_key`, default `"input"`).
+`InputWaiter` is injected into handlers (DI, like `FSMContext`).  
+If `input` already means something else: `setup_input(dp, data_key="aiogram_input")`.
+
+Redis stores wait **markers** only. The awaiting coroutine still lives on the worker that called `wait()`. Prefer `ttl=` in production.
 
 ## Examples
 
@@ -81,7 +89,7 @@ dp.include_router(support)
 
 ### Magic filters — wait for a sticker, not chat noise
 
-**Pain:** you ask for a sticker pack preview. People spam text. In groups, someone else replies first.
+**Pain:** you ask for a sticker. People spam text. In groups, someone else replies first.
 
 ```python
 from aiogram import F
@@ -108,7 +116,19 @@ async def sticker_id(message: Message, input: InputWaiter):
     )
 ```
 
-Only a sticker from the same user resolves the wait. Texts, photos, and other users’ stickers keep flowing to the rest of your bot.
+### Storage — Memory locally, Redis in production
+
+**Pain:** one process is fine on your laptop; several workers need shared wait markers and expiry.
+
+```python
+# dev
+setup_input(dp, storage=MemoryInputStorage())
+
+# prod
+setup_input(dp, storage=RedisInputStorage(redis, ttl=300, key_prefix="mybot:wait:"))
+```
+
+Same `input.wait(...)` API either way.
 
 ## 3.x → 4.x
 
