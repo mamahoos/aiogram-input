@@ -19,8 +19,7 @@ Register once on the Dispatcher. Await `input.wait(...)`. Get a `Message`, or `N
 ## Install
 
 ```bash
-pip install -U aiogram-input
-pip install -U "aiogram-input[redis]"   # for RedisInputStorage
+pip install aiogram-input
 ```
 
 Python 3.10+, aiogram 3.
